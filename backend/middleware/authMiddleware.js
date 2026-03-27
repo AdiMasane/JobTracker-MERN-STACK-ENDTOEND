@@ -1,27 +1,23 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
-const protect = (req,res,next)=>{
+const protect = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
 
-const token = req.headers.authorization?.split(" ")[1]
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
 
-if(!token){
-return res.status(401).json({message:"Not authorized"})
-}
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-try{
+    // 🔥 IMPORTANT FIX
+    req.user = { userId: decoded.id };   // 👈 make sure token has `id`
 
-const decoded = jwt.verify(token,process.env.JWT_SECRET)
+    next();
 
-req.user = decoded
+  } catch (error) {
+    res.status(401).json({ message: "Token invalid" });
+  }
+};
 
-next()
-
-}catch(error){
-
-res.status(401).json({message:"Token invalid"})
-
-}
-
-}
-
-export default protect
+export default protect;
